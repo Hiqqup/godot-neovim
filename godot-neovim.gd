@@ -1,7 +1,7 @@
 @tool
 extends EditorPlugin
 const PID_UNASSIGNED:int = 0;
-var PLUGIN_NAME : String = "godot-neovim"
+var PLUGIN_NAME : String = "godot-neovim" 
 var _neovim_pid: int = PID_UNASSIGNED;
 var _code_edit_properties:= CodeEditPropertiesMap.new();
 var _nvim_connection := NvimConnection.new();
@@ -83,6 +83,16 @@ class NvimConnection:
   			params
 		]).result);
 		_msgid= (_msgid + 1)%128; # ill probably need a better way to handle this
+	func _handle_redraw(commands: Array):
+		for command in commands:
+			print(command);
+		
+	func _handle_responses(responses: Array):
+		for response in responses:
+			if (response[0] == NvimConnection.MSG_PACK_RPC_TYPES.NOTIFICATION and 
+			 	response[1] == "redraw"): 
+				#print(response);
+				_handle_redraw(response[2])
 	func process():
 		if not _get_responses:
 			return
@@ -90,11 +100,16 @@ class NvimConnection:
 		var err = res[0]
 		var data= res[1]
 		if err == 0  and not data.is_empty():
+			var decoded = MsgPack.decode_multiple(data);
+			if decoded.error != OK:
+				printerr("Error decoding: "+ decoded.error_string)
 			
-			print("message: " + str(MsgPack.decode(data)));
+			_handle_responses(decoded.result)
+			#print(data)
 		elif err != 0:
 			print("Connection error: " + error_string(err))
 			_get_responses = false
+
 
 func _enable_plugin() -> void:
 	#add_autoload_singleton("mgspack", "res://addons/godot-neovim/mgspack.gd")
@@ -106,6 +121,8 @@ func _disable_plugin() -> void:
 	EditorInterface.set_plugin_enabled(PLUGIN_NAME + "/msgpack", false)
 
 func _start_nvim()->void:
+	# start with this command nvim --listen 127.0.0.1:6666 -u /home/ju/code/3d_squash_the_creeps_starter/addons/godot-neovim/init.lua
+
 	var args: PackedStringArray = ["--listen", "127.0.0.1:6666"]#, "--embed", "--headless"]
 	_neovim_pid = OS.create_process("nvim", args);
 	print(_neovim_pid)
@@ -155,6 +172,7 @@ func _setup_gui_input_callback(code_edit: CodeEdit):
 		return
 	props.input_forwarded = true;
 	code_edit.gui_input.connect(_process_text_edit_gui_input)
+var label:Label;
 
 func _enter_tree() -> void:
 	#_start_nvim()
@@ -173,7 +191,13 @@ func _enter_tree() -> void:
 		#_setup_caret_moved_callback(_code_edit)
 		_setup_gui_input_callback(code_edit)
 		)
-		
+	
+	FileDump.file_dump(code_edit)
+	label = Label.new();
+	label.text = "hehehe";
+	#vsplitcontainer.add_child(label);
+
+	#
 	#_setup_caret_moved_callback(code_edit)
 		
 
@@ -185,6 +209,28 @@ func _process(delta: float) -> void:
 
 
 func _exit_tree() -> void:
+	label.queue_free();
 	_nvim_connection.send_request("nvim_ui_detach",[]);
 	if _neovim_pid != PID_UNASSIGNED:
 		OS.kill(_neovim_pid)
+
+
+
+## logging
+
+class FileDump:
+	static func file_dump(node:Node):
+		var file = FileAccess.open("res://dump.txt", FileAccess.WRITE)
+		print_treee(file, node)
+		
+	static func print_treee(file:FileAccess , node: Node, indent: int = 0) -> void:
+		var str = "";
+		for i in range(indent):
+			str+=" "
+		str += str(node)
+		if node is Label:
+			str+=node.text
+		str+= "\n"
+		file.store_string(str);
+		for child in node.get_children():
+			print_treee(file, child, indent + 4)

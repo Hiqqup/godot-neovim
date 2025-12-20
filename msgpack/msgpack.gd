@@ -36,6 +36,21 @@ static func decode(bytes):
 	else:
 		return {result = null, error = ctx.error, error_string = ctx.error_string}
 
+static func decode_multiple(bytes: PackedByteArray):
+	var buffer = StreamPeerBuffer.new()
+	buffer.big_endian = true
+	buffer.data_array = bytes
+	var ctx = {error = OK, error_string = ""}
+	var result =[];
+	while buffer.get_position() < buffer.get_size():
+		var value = _decode(buffer, ctx)
+		if ctx.error != OK:
+			return {result = null, error = ctx.error, error_string = ctx.error_string}
+		result.append(value);
+	return {result = result, error = OK, error_string = ""}
+	
+	
+
 static func _encode(buf, value, ctx):
 	match typeof(value):
 		TYPE_NIL:
@@ -159,6 +174,7 @@ static func _encode(buf, value, ctx):
 
 static func _decode(buffer, ctx):
 	if buffer.get_position() == buffer.get_size():
+		print(buffer.get_position());
 		ctx.error = FAILED
 		ctx.error_string = "unexpected end of input"
 		return null
@@ -356,6 +372,23 @@ static func _decode(buffer, ctx):
 		var res = buffer.get_data(size)
 		assert(res[0] == OK)
 		return res[1]
+		
+	elif head == 0xC7: # ext 8
+		if buffer.get_size() - buffer.get_position() < 2:
+			ctx.error = FAILED
+			ctx.error_string = "not enough buffer for ext8 header"
+			return null
+		var size = buffer.get_u8()   # N bytes of data
+		var type = buffer.get_8()    # type byte
+		if buffer.get_size() - buffer.get_position() < size:
+			ctx.error = FAILED
+			ctx.error_string = "not enough buffer for ext8 data required %s bytes" % [size]
+			return null
+		var data = buffer.get_data(size)
+		assert(data[0] == OK)
+		# Return a dictionary like JS/Python decoders
+		return {"type": type, "data": data[1]}
+	
 
 	# Array
 	elif head & 0xf0 == 0x90:
