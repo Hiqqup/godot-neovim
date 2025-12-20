@@ -1,4 +1,5 @@
-extends Node
+@tool
+extends EditorPlugin
 class_name MsgPack
 
 static func encode(value):
@@ -24,7 +25,6 @@ static func decode(bytes):
 	var buffer = StreamPeerBuffer.new()
 	buffer.big_endian = true
 	buffer.data_array = bytes
-
 	var ctx = {error = OK, error_string = ""}
 	var value = _decode(buffer, ctx)
 	if ctx.error == OK:
