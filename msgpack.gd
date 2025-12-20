@@ -1,7 +1,4 @@
-@tool
-extends EditorPlugin
-class_name MsgPack
-
+# MsgPack
 static func encode(value):
 	var ctx = {error = OK, error_string = ""}
 	var buffer = StreamPeerBuffer.new()
