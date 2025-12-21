@@ -9,7 +9,7 @@ class T:
 	var _msgid := 0 ;
 	var _get_responses: bool = true;
 	signal recieved(responses: Array)
-	static func constructer()->T:
+	static func constructor()->T:
 		var ret = T.new();
 		ret._neovim_tcp_connection.connect_to_host("127.0.0.1", 6666);
 		var status = StreamPeerTCP.Status.STATUS_CONNECTING;
