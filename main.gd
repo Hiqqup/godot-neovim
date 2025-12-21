@@ -21,7 +21,14 @@ class ResponseHandler:
 			var command_string: String = command[0];
 			#print(command_string);
 			if command_string == "mode_change":
-				EditorState.singleton.state = command[1][0];
+				EditorState.singleton.mode = command[1][0];
+				EditorUtil.set_cursor_mode();
+			if command_string == "win_viewport":
+				var params: Array = command[1];
+				var line = params[4];
+				var column = params[5]
+				EditorState.singleton.current_code_edit.set_caret_line(line)
+				EditorState.singleton.current_code_edit.set_caret_column(column)
 				print(command);
 		
 	func handle_responses(responses: Array):
@@ -49,6 +56,9 @@ class NvimApiRequester:
 		ret._connection = connection;
 		ret._editor_plugin = editor_plugin;
 		return ret
+	func clear_pointers()->void:
+		_connection = null
+		_editor_plugin = null
 	func attach_ui( code_edit: CodeEdit):
 		var code_dimensions:= code_edit.size
 		if code_edit.minimap_draw:
@@ -70,7 +80,7 @@ class NvimApiRequester:
 			var parsed = EventParser.parse(event)
 			if parsed :
 				_connection.send_request("nvim_input", [ parsed])
-			if EditorState.singleton.state != "insert":
+			if EditorState.singleton.mode != "insert":
 				_editor_plugin.get_viewport().set_input_as_handled()
 	func change_file(script:Script):
 		var file_path:String = ProjectSettings.globalize_path(script.resource_path)
@@ -78,10 +88,13 @@ class NvimApiRequester:
 class EditorCallbackManager:
 	var _nvim_api_requester: NvimApiRequester
 	var _code_edit_properties:= CodeEditPropertiesMap.new();
-	static func constructer(nvim_api_requester: NvimApiRequester)->EditorCallbackManager:
+	static func constructor(nvim_api_requester: NvimApiRequester)->EditorCallbackManager:
 		var ret = EditorCallbackManager.new();
 		ret._nvim_api_requester = nvim_api_requester;
 		return ret;
+	func clear_pointers()->void:
+		_nvim_api_requester = null
+		_code_edit_properties = null
 	func setup_file_changed(script_editor: ScriptEditor):
 		var code_edit:= script_editor.get_current_editor().get_base_editor() as CodeEdit
 		script_editor.editor_script_changed.connect(func(script:Script):
@@ -89,6 +102,7 @@ class EditorCallbackManager:
 			var _code_edit:= script_editor.get_current_editor().get_base_editor() as CodeEdit
 			#_setup_caret_moved_callback(_code_edit)
 			setup_gui_input(code_edit)
+			EditorState.singleton.current_code_edit = _code_edit;
 			)
 	func setup_caret_moved(code_edit: CodeEdit):
 		var props:=_code_edit_properties.get_properties(code_edit);
@@ -105,22 +119,38 @@ class EditorCallbackManager:
 class EditorState:
 	var _mode_label:Label = Label.new()
 	static var singleton: EditorState
-	var state: String :
+	var current_code_edit: CodeEdit;
+	var mode: String :
 		set(val):
 			_mode_label.text = val
-			state = val;
+			mode = val;
 	func add_label_to_status_bar(status_bar: HBoxContainer):
 		status_bar.add_child( _mode_label)
 		status_bar.move_child(_mode_label, 2)
 	func free_label():
 		_mode_label.free()
+class EditorUtil:
+	static func set_cursor_mode():
+		var code_edit := EditorState.singleton.current_code_edit;
+		var mode = EditorState.singleton.mode
+		if mode == 'insert':
+			code_edit.caret_type = CodeEdit.CARET_TYPE_LINE
+			code_edit.caret_blink = true;
+		else:
+			code_edit.caret_type = CodeEdit.CARET_TYPE_BLOCK
+			code_edit.caret_blink = false;
+	
+
 func _enable_plugin() -> void:
 	pass
 
 func _disable_plugin() -> void:
 	pass
 
+
 var _nvim_connection: NvimConnection.T;
+var _nvim_api_requester:NvimApiRequester
+var _editor_callback_manager: EditorCallbackManager
 func _enter_tree() -> void:
 	#_start_nvim() 
 	
@@ -130,14 +160,15 @@ func _enter_tree() -> void:
 	_nvim_connection.recieved.connect(
 		func(responses:Array):_response_handler.handle_responses(responses))
 	
-	var _nvim_api_requester:=NvimApiRequester.constructor(_nvim_connection, self)
-	var _editor_callback_manager:= EditorCallbackManager.constructer(_nvim_api_requester);
+	_nvim_api_requester=NvimApiRequester.constructor(_nvim_connection, self)
+	_editor_callback_manager= EditorCallbackManager.constructor(_nvim_api_requester);
 	
 	var script_editor := EditorInterface.get_script_editor();
 	var code_edit:= script_editor.get_current_editor().get_base_editor() as CodeEdit
+	EditorState.singleton.current_code_edit = code_edit;
 	_editor_callback_manager.setup_file_changed(script_editor);
 	_nvim_api_requester.attach_ui(code_edit)
-	_nvim_api_requester.go_insert_mode()
+	#_nvim_api_requester.go_insert_mode()
 	_editor_callback_manager.setup_gui_input(code_edit)
 	var status_bar: HBoxContainer= code_edit.get_parent().get_child(1)
 	EditorState.singleton.add_label_to_status_bar(status_bar);
@@ -152,8 +183,15 @@ func _process(delta: float) -> void:
 
 
 func _exit_tree() -> void:
-	EditorState.singleton.free_label();
 	_nvim_connection.send_request("nvim_ui_detach",[]);
+	EditorState.singleton.mode = "insert"
+	EditorUtil.set_cursor_mode();
+	EditorState.singleton = null
+	_nvim_api_requester.clear_pointers();
+	_nvim_api_requester = null
+	_editor_callback_manager.clear_pointers()
+	_editor_callback_manager = null
+	EditorState.singleton.free_label();
 	#_nvim_subprocess.kill();
 
 
