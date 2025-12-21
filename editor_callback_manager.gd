@@ -2,7 +2,6 @@ const EditorState := preload("res://addons/godot-neovim/editor_state.gd")
 const NvimApiRequester:= preload("res://addons/godot-neovim/nvim_api_requester.gd")
 class T:
 	var _nvim_api_requester: NvimApiRequester.T
-	var _code_edit_properties:= CodeEditPropertiesMap.new();
 	var _connections: Array[Connection];
 	static func constructor(nvim_api_requester: NvimApiRequester.T)->T:
 		var ret = T.new();
@@ -13,9 +12,7 @@ class T:
 			connection.discon();
 		_connections = []
 		_nvim_api_requester = null
-		_code_edit_properties = null
 	func setup_file_changed(script_editor: ScriptEditor):
-		var code_edit:= script_editor.get_current_editor().get_base_editor() as CodeEdit
 		_connections.append(Connection.constructor(
 			script_editor,
 			script_editor.editor_script_changed,
@@ -23,12 +20,19 @@ class T:
 			_nvim_api_requester.change_file(script);
 			var _code_edit:= script_editor.get_current_editor().get_base_editor() as CodeEdit
 			setup_caret_moved(_code_edit)
-			setup_gui_input(code_edit)
-			EditorState.T.singleton.current_code_edit = _code_edit;
+			setup_gui_input(_code_edit)
+			setup_status(_code_edit);
+			EditorState.global.current = _code_edit;
 			)
 		))
+	func setup_status(code_edit: CodeEdit):
+		var props:=EditorState.global.get_properties(code_edit);
+		if props.has_status:
+			return
+		props.has_status = true;
+		props.mode_label.setup_status_bar(code_edit);
 	func setup_caret_moved(code_edit: CodeEdit):
-		var props:=_code_edit_properties.get_properties(code_edit);
+		var props:=EditorState.global.get_properties(code_edit);
 		if props.caret_moves:
 			return
 		props.caret_moves = true;
@@ -38,22 +42,13 @@ class T:
 			(func(): _nvim_api_requester.sync_caret(code_edit))
 		))
 	func setup_gui_input(code_edit:CodeEdit):
-		var props:=_code_edit_properties.get_properties(code_edit);
+		var props:=EditorState.global.get_properties(code_edit);
 		if props.input_forwarded:
 			return
 		props.input_forwarded = true;
 		code_edit.gui_input.connect(_nvim_api_requester.process_text_edit_gui_input)
 
-class CodeEditProperties:
-	var caret_moves :=false
-	var input_forwarded :=false
-class CodeEditPropertiesMap:
-	var map: Dictionary[CodeEdit, CodeEditProperties]
-	func get_properties(code_edit: CodeEdit) -> CodeEditProperties:
-		if map.has(code_edit):
-			return map[code_edit];
-		map[code_edit] = CodeEditProperties.new();
-		return map[code_edit];
+
 class Connection:
 	var object:Object
 	var sig: Signal

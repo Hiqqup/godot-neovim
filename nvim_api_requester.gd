@@ -23,8 +23,6 @@ class T:
 		var terminal_dimensions := Vector2i( code_dimensions/char_dimension)
 		# this is really inacurate please fix this 
 		_connection.send_request("nvim_ui_attach", [terminal_dimensions.x, terminal_dimensions.y,{}])
-	func go_insert_mode():
-		_connection.send_request("nvim_input", ["i"])
 	func sync_caret(code_edit:CodeEdit):
 		var line := code_edit.get_caret_line() + 1 #might be specific to my config
 		var col :=  code_edit.get_caret_column()
@@ -34,7 +32,7 @@ class T:
 			var parsed = EventParser.parse(event)
 			if parsed :
 				_connection.send_request("nvim_input", [ parsed])
-			if EditorState.T.singleton.mode != "insert":
+			if EditorState.global.mode != "insert":
 				_editor_plugin.get_viewport().set_input_as_handled()
 	func change_file(script:Script):
 		var file_path:String = ProjectSettings.globalize_path(script.resource_path)
