@@ -1,4 +1,5 @@
 class T:
+	#TODO this cannot be just one there have to be one per text edit
 	var _mode_label:Label = Label.new()
 	static var singleton: T
 	var current_code_edit: CodeEdit;
