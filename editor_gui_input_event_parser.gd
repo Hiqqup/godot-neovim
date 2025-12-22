@@ -1,3 +1,7 @@
+
+signal parsed(input_string:String)
+signal event_handeled()
+
 const MISC_KEYS:= {
 	KEY_BACKSPACE: "BS",
 	KEY_ESCAPE: "Esc",
@@ -12,16 +16,22 @@ const MISC_KEYS:= {
 const WIERD_UNICODES := {
 	60: "<lt>"
 }
-static func parse(event: InputEventKey):
+func parse(any_event: InputEvent):
+	var event:= any_event as InputEventKey
+	if not event:
+		return
+	
 	var unicode :=event.unicode;
 	if WIERD_UNICODES.has(unicode):
-		return WIERD_UNICODES[unicode];
+		parsed.emit( WIERD_UNICODES[unicode]);
+		return
 	if (unicode != 0&&
 		!event.alt_pressed&&
 		!event.ctrl_pressed&&
 		!event.meta_pressed
 		):
-		return String.chr(unicode);
+		parsed.emit( String.chr(unicode));
+		return
 	var mask = "<"
 	var keycode :Key = event.keycode;
 	
@@ -39,4 +49,4 @@ static func parse(event: InputEventKey):
 	elif MISC_KEYS.has(keycode):
 		mask+=MISC_KEYS[keycode];
 	mask+=">"
-	return mask
+	parsed.emit(mask)

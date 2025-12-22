@@ -1,93 +1,64 @@
 @tool
 extends EditorPlugin
-const EventParser := 			preload("res://addons/godot-neovim/event_parser.gd")
-const NvimConnection := 		preload("res://addons/godot-neovim/nvim_connection.gd")
-const NvimApiRequester:=		preload("res://addons/godot-neovim/nvim_api_requester.gd")
-const EditorState:= 			preload("res://addons/godot-neovim/editor_state.gd")
-const EditorCallbackManager:=	preload("res://addons/godot-neovim/editor_callback_manager.gd")
-const ResponseHandler:=			preload("res://addons/godot-neovim/response_handler.gd")
-class NvimSubprocess:
-	var _neovim_pid: int = PID_UNASSIGNED;
-	const PID_UNASSIGNED:int = 0;
-	func start():
-		# start with this command nvim --listen 127.0.0.1:6666 -u /home/ju/code/3d_squash_the_creeps_starter/addons/godot-neovim/init.lua
-		var args: PackedStringArray = ["--listen", "127.0.0.1:6666"]#, "--embed", "--headless"]
-		_neovim_pid = OS.create_process("nvim", args);
-		print(_neovim_pid)
-	func kill():
-		if _neovim_pid != PID_UNASSIGNED:
-			OS.kill(_neovim_pid)
-
+const NvimConnection := preload("res://addons/godot-neovim/nvim_connection.gd")
+const NvimEventParser:= preload("res://addons/godot-neovim/nvim_event_parser.gd")
+const NvimApiRequester:= preload("res://addons/godot-neovim/nvim_api_requester.gd")
+const EditorEvents:= preload("res://addons/godot-neovim/editor_events.gd")
+const EditorGuiInputParser:= preload("res://addons/godot-neovim/editor_gui_input_event_parser.gd")
+const CodeEditHandler:= preload("res://addons/godot-neovim/code_edit_handler.gd")
+const CodeEditInfo:=preload("res://addons/godot-neovim/code_edit_info.gd")
+const VimModeState:= preload("res://addons/godot-neovim/vim_mode_state.gd")
+var _nvim_connection:=NvimConnection.new();
+var _nvim_event_parser:=NvimEventParser.new();
+var _nvim_api_requester:=NvimApiRequester.new();
+var _editor_events:= EditorEvents.new();
+var _editor_gui_input_parser:= EditorGuiInputParser.new();
+var _code_edit_handler:CodeEditHandler;
+var _vim_mode_state:=VimModeState.new();
+var _replace_code_edit_handler:=(func(_path:=""): _code_edit_handler = CodeEditHandler.replace(_code_edit_handler,_editor_events))
 func _enable_plugin() -> void:
 	pass
+func _enter_tree() -> void:
 
+	_editor_events.file_changed.connect(_replace_code_edit_handler);
+	_editor_events.file_changed.connect(_nvim_api_requester.change_file)
+	_editor_events.caret_moved.connect(_nvim_api_requester.move_caret)
+	_editor_events.gui_input.connect(_editor_gui_input_parser.parse);
+	_editor_events.gui_input.connect(_vim_mode_state.check_input);
+	_editor_gui_input_parser.parsed.connect(_nvim_api_requester.send_input);
+	_vim_mode_state.input_handeled.connect(func(): get_viewport().set_input_as_handled());
+	_nvim_api_requester.request.connect(_nvim_connection.send_request);
+	_nvim_connection.recieved.connect(_nvim_event_parser.parse);
+	_nvim_event_parser.mode_changed.connect(_vim_mode_state.set_mode)
+	_nvim_event_parser.cursor_moved.connect(func(pos): _code_edit_handler.set_caret(pos));
+	_nvim_event_parser.mode_changed.connect(func(mode): _code_edit_handler.set_mode(mode))
+	
+	_editor_events.setup();
+	_replace_code_edit_handler.call();
+	_nvim_connection.establish_connection();
+	_setup_ui_attach();
+	_open_current_file();
+
+
+func _process(delta: float) -> void:
+	_nvim_connection.process()
+func _exit_tree() -> void:
+	_nvim_api_requester.detatch_ui()
+	_code_edit_handler.delete();
 func _disable_plugin() -> void:
 	pass
 
 
-var _nvim_connection: NvimConnection.T;
-var _nvim_api_requester:NvimApiRequester.T
-var _editor_callback_manager: EditorCallbackManager.T
-func _enter_tree() -> void:
-	EditorState.global= EditorState.CodeEditManager.new();
-	#_start_nvim() 
-	
-	var _response_handler:= ResponseHandler.T.constructor();
-	_nvim_connection = NvimConnection.T.constructor();
-	_nvim_connection.recieved.connect(
-		func(responses:Array):_response_handler.handle_responses(responses))
-	
-	_nvim_api_requester=NvimApiRequester.T.constructor(_nvim_connection, self)
-	_editor_callback_manager= EditorCallbackManager.T.constructor(_nvim_api_requester);
-	
+
+
+func _setup_ui_attach():
 	var script_editor := EditorInterface.get_script_editor();
 	var code_edit:= script_editor.get_current_editor().get_base_editor() as CodeEdit
-	EditorState.global.current = code_edit;
-	_editor_callback_manager.setup_file_changed(script_editor);
-	_nvim_api_requester.attach_ui(code_edit)
-	#_nvim_api_requester.go_insert_mode()
-	_editor_callback_manager.setup_gui_input(code_edit)
-	_editor_callback_manager.setup_status(code_edit);
+	var dimensions:= CodeEditInfo.get_dimensions(code_edit)
+	_nvim_api_requester.attach_ui(dimensions)
 
-	_editor_callback_manager.setup_caret_moved(code_edit) 
-	 
-		
-
-func _process(delta: float) -> void:
-	_nvim_connection.process()
-	
-
-
-func _exit_tree() -> void:
-	_nvim_connection.send_request("nvim_ui_detach",[]);
-	EditorState.global.mode = "insert"
-	EditorState.set_cursor_mode();
-	EditorState.global.clear_pointers();
-	EditorState.global = null
-	_nvim_api_requester.clear_pointers();
-	_nvim_api_requester = null
-	_editor_callback_manager.clear_pointers_disconnect_connections()
-	_editor_callback_manager = null
-	EditorState.global = null
-	#_nvim_subprocess.kill();
-
-
-
-## logging
-
-class FileDump:
-	static func file_dump(node:Node):
-		var file = FileAccess.open("res://dump.txt", FileAccess.WRITE)
-		print_treee(file, node)
-		
-	static func print_treee(file:FileAccess , node: Node, indent: int = 0) -> void:
-		var str = "";
-		for i in range(indent):
-			str+=" "
-		str += str(node)
-		if node is Label:
-			str+=node.text
-		str+= "\n"
-		file.store_string(str);
-		for child in node.get_children():
-			print_treee(file, child, indent + 4)
+func _open_current_file():
+	var script_editor := EditorInterface.get_script_editor();
+	var script:= script_editor.get_current_script();
+	var script_path := CodeEditInfo.get_file_path(script)
+	_nvim_api_requester.change_file(script_path)
