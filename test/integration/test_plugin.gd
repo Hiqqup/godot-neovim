@@ -1,0 +1,60 @@
+extends  GutTest
+const Plugin := preload("res://addons/godot-neovim/plugin.gd")
+const CodeEditHandlerStub:= preload("res://test/stubs/code_edit_handler_stub.gd")
+const DontChangeThisScript:= preload("res://test/stubs/dont_change_this_script.gd")
+const NvimConnectionStub:= preload("res://test/stubs/nvim_connection_stub.gd")
+const EditorSetupStub:=preload("res://test/stubs/editor_setup_stub.gd")
+var plugin := Plugin.new();
+
+func before_all():
+	plugin.code_edit_handler = CodeEditHandlerStub.constructor(plugin);
+	plugin.editor_setup = EditorSetupStub.new();
+	plugin.nvim_connection = NvimConnectionStub.new();
+	add_child(plugin);
+	plugin.editor_events.file_changed.disconnect(plugin.code_edit_handler.set_code_edit)
+func after_all():
+	plugin.code_edit_handler.cleanup();
+	remove_child(plugin);
+	plugin.free();
+
+func after_each():
+	plugin.code_edit_handler.remove_code_edit();
+
+static func get_some_script_path()->String:
+	return ProjectSettings.globalize_path((DontChangeThisScript as Script).resource_path);
+func evaluate_api(apply_changes:Callable,command_string:String ):
+	watch_signals(plugin.nvim_api_requester)
+	apply_changes.call();
+	assert_signal_emitted(plugin.nvim_api_requester , "request")
+	assert_eq(command_string,get_signal_parameters(plugin.nvim_api_requester,"request")[0])
+
+func test_response_mode_changed():
+	plugin.nvim_connection.recieved.emit([[1, 10, null, 1], [2, "redraw", [["mode_change", ["normal", 2]], ["flush", []]]]]);
+	assert_eq(  plugin.code_edit_handler.code_edit.caret_type, CodeEdit.CARET_TYPE_BLOCK)
+	assert_eq( plugin.vim_mode_state.mode, "normal");
+func test_response_cursor_moved():
+	plugin.editor_events.file_changed.emit(get_some_script_path());
+	var pos:= Vector2i(10,10);
+	plugin.nvim_connection.recieved.emit([[1, 20, null, null], [2, "redraw", [["win_viewport", [2, { "type": 1, "data": [205, 3, 232] }, 10, 10, pos.y-1, pos.x, 10, 10, 10]], ["flush", []]]]])
+	assert_eq(  plugin.code_edit_handler.get_caret_pos(), pos)
+	
+func test_file_change():
+	evaluate_api(func():
+		plugin.editor_events.file_changed.emit(get_some_script_path());
+	,"nvim_command")
+func test_caret_moved():
+	evaluate_api(func():
+		plugin.editor_events.file_changed.emit(get_some_script_path());
+		plugin.code_edit_handler.set_caret_pos(Vector2i(10,10));
+		plugin.code_edit_handler.code_edit.caret_changed.emit();
+	,"nvim_win_set_cursor")
+
+func test_gui_input():
+	plugin.vim_mode_state.mode = "normal"
+	evaluate_api(func():
+		var key_event = InputEventKey.new();
+		key_event.unicode = ord("j")
+		plugin.code_edit_handler.gui_input.emit(key_event);
+	,"nvim_input")
+	assert_true(get_viewport().is_input_handled());
+	

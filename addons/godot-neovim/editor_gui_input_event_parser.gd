@@ -1,6 +1,5 @@
 
 signal parsed(input_string:String)
-signal event_handeled()
 
 const MISC_KEYS:= {
 	KEY_BACKSPACE: "BS",

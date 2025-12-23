@@ -33,7 +33,7 @@ func process():
 	var err = res[0]
 	var data= res[1]
 	if err == 0  and not data.is_empty():
-		print(data)
+		#print(data)
 		var decoded = MsgPack.decode_multiple(data);
 		if decoded.error != OK:
 			printerr("Error decoding: "+ decoded.error_string)

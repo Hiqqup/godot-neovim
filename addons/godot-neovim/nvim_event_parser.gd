@@ -5,6 +5,7 @@ signal mode_changed(mode:String)
 signal cursor_moved(pos: Vector2i)
 
 func parse(data: Array):
+	#print(data);
 	for response in data:
 		const RPC_NOTIFICATION:=2
 		if (response[0] == RPC_NOTIFICATION and
@@ -23,4 +24,6 @@ func _handle_redraw(commands: Array):
 			var params: Array = command[1];
 			var line = params[4];
 			var column = params[5]
-			cursor_moved.emit(Vector2i(column,line))
+			var pos :=Vector2i(column,line)
+			#print(pos)
+			cursor_moved.emit(pos)

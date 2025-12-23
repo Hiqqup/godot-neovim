@@ -4,6 +4,7 @@ var code_edit_stub: CodeEdit;
 func before_all():
 	code_edit_stub = CodeEdit.new();
 	code_edit_stub.size = Vector2(200,200);
+	code_edit_stub.text = (CodeEditInfo as Script).source_code;
 func after_all():
 	code_edit_stub.free();
 
@@ -13,17 +14,12 @@ func test_get_dimensions():
 	var dim2 = CodeEditInfo.get_dimensions(code_edit_stub);
 	assert_ne(dim, dim2);
 
+func test_caret_pos():
+	var pos1 = CodeEditInfo.get_caret_pos(code_edit_stub);
+	CodeEditInfo.set_caret_pos(code_edit_stub, Vector2i(12,12));
+	var pos2 = CodeEditInfo.get_caret_pos(code_edit_stub);
+	assert_ne(pos1,pos2);
 
-	
-
-#static func get_caret_pos(code_edit:CodeEdit)->Vector2i:
-#	var line := code_edit.get_caret_line() + 1 #might be specific to my config
-#	var col :=  code_edit.get_caret_column()
-#	return Vector2i(col, line)
-#static func get_file_path(script:Script)->String:
-#	var file_path:String = ProjectSettings.globalize_path(script.resource_path)
-#	return file_path;
-#static func get_current_code_edit()->CodeEdit:
-#	var script_editor := EditorInterface.get_script_editor();
-#	var _code_edit:= script_editor.get_current_editor().get_base_editor() as CodeEdit
-#	return _code_edit
+func test_get_file_path():
+	var path = CodeEditInfo.get_file_path(CodeEditInfo as Script);
+	assert_eq(path, ProjectSettings.globalize_path((CodeEditInfo as Script).resource_path));
