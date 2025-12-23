@@ -34,20 +34,24 @@ func test_response_mode_changed():
 	assert_eq( plugin.vim_mode_state.mode, "normal");
 func test_response_cursor_moved():
 	plugin.editor_events.file_changed.emit(get_some_script_path());
-	var pos:= Vector2i(10,10);
+	var pos:= Vector2i(5,10);
 	plugin.nvim_connection.recieved.emit([[1, 20, null, null], [2, "redraw", [["win_viewport", [2, { "type": 1, "data": [205, 3, 232] }, 10, 10, pos.y-1, pos.x, 10, 10, 10]], ["flush", []]]]])
 	assert_eq(  plugin.code_edit_handler.get_caret_pos(), pos)
+	
 	
 func test_file_change():
 	evaluate_api(func():
 		plugin.editor_events.file_changed.emit(get_some_script_path());
 	,"nvim_command")
 func test_caret_moved():
+	var pos :=Vector2i(5,10);
 	evaluate_api(func():
 		plugin.editor_events.file_changed.emit(get_some_script_path());
-		plugin.code_edit_handler.set_caret_pos(Vector2i(10,10));
+		plugin.code_edit_handler.set_caret_pos(pos);
 		plugin.code_edit_handler.code_edit.caret_changed.emit();
 	,"nvim_win_set_cursor")
+	var request_params: Array= get_signal_parameters(plugin.nvim_api_requester, "request")[1][1]
+	assert_eq(pos , Vector2i(request_params[1], request_params[0]-1))
 
 func test_gui_input():
 	plugin.vim_mode_state.mode = "normal"
