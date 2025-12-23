@@ -19,12 +19,15 @@ func establish_connection():
 		push_error("failed to connect to nvim")
 
 func send_request(method_name: String, params: Array):
-	_neovim_tcp_connection.put_data(MsgPack.encode([
+	var encoded=MsgPack.encode([
  		MSG_PACK_RPC_TYPES.REQUEST,
   		_msgid,               
   		method_name,      
   		params
-	]).result);
+	]);
+	if encoded.error != Error.OK:
+		push_error(encoded.error_string);
+	_neovim_tcp_connection.put_data(encoded.result);
 	_msgid= (_msgid + 1)%128; # ill probably need a better way to handle this
 func process():
 	if not _get_responses:

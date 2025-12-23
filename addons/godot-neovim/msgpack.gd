@@ -48,6 +48,8 @@ static func decode_multiple(bytes: PackedByteArray):
 	
 
 static func _encode(buf, value, ctx):
+	if typeof(value) == TYPE_STRING_NAME:
+		value = str(value)
 	match typeof(value):
 		TYPE_NIL:
 			buf.put_u8(0xc0)
@@ -78,7 +80,6 @@ static func _encode(buf, value, ctx):
 		TYPE_FLOAT:
 			buf.put_u8(0xca)
 			buf.put_float(value)
-
 		TYPE_STRING:
 			var bytes = value.to_utf8_buffer()
 

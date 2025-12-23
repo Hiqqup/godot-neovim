@@ -7,6 +7,7 @@ signal cursor_moved(pos: Vector2i)
 func parse(data: Array):
 	#print(data);
 	for response in data:
+		#print(response);
 		const RPC_NOTIFICATION:=2
 		if (response[0] == RPC_NOTIFICATION and
 			response[1] == "redraw"):
