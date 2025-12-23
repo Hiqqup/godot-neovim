@@ -16,3 +16,7 @@ static func get_caret_pos(code_edit:CodeEdit)->Vector2i:
 static func get_file_path(script:Script)->String:
 	var file_path:String = ProjectSettings.globalize_path(script.resource_path)
 	return file_path;
+static func get_current_code_edit()->CodeEdit:
+	var script_editor := EditorInterface.get_script_editor();
+	var _code_edit:= script_editor.get_current_editor().get_base_editor() as CodeEdit
+	return _code_edit
