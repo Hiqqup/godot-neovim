@@ -17,6 +17,7 @@ func setup():
 	set_code_edit_requested.emit();
 	connection_establish_requested.emit();
 	ui_attach_requested.emit(dimensions, {
-		"ext_cmdline" = true
+		"ext_cmdline" = true,
+		"ext_linegrid" = true,
 	});
 	open_current_file_requested.emit(script_path)

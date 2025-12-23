@@ -36,12 +36,10 @@ func process():
 	var err = res[0]
 	var data= res[1]
 	if err == 0  and not data.is_empty():
-		#print(data)
 		var decoded = MsgPack.decode_multiple(data);
 		if decoded.error != OK:
 			printerr("Error decoding: "+ decoded.error_string)
 		recieved.emit(decoded.result);
-		#print(data)
 	elif err != 0:
 		print("Connection error: " + error_string(err))
 		_get_responses = false

@@ -57,6 +57,7 @@ func test_gui_input():
 	plugin.vim_mode_state.mode = "normal"
 	evaluate_api(func():
 		var key_event = InputEventKey.new();
+		key_event.pressed = true;
 		key_event.unicode = ord("j")
 		plugin.code_edit_handler.gui_input.emit(key_event);
 	,"nvim_input")

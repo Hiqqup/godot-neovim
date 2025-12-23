@@ -20,6 +20,8 @@ func parse(any_event: InputEvent):
 	var event:= any_event as InputEventKey
 	if not event:
 		return
+	if not event.pressed:
+		return;
 	
 	var unicode :=event.unicode;
 	if WIERD_UNICODES.has(unicode):
