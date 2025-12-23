@@ -1,5 +1,6 @@
 
 signal parsed(input_string:String)
+signal input_handeled()
 
 const MISC_KEYS:= {
 	KEY_BACKSPACE: "BS",
@@ -48,4 +49,6 @@ func parse(any_event: InputEvent):
 	elif MISC_KEYS.has(keycode):
 		mask+=MISC_KEYS[keycode];
 	mask+=">"
+	if mask == "<C-[>":
+		input_handeled.emit();
 	parsed.emit(mask)

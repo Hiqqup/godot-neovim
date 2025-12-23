@@ -22,6 +22,7 @@ func _enter_tree():
 	code_edit_handler.gui_input.connect(editor_gui_input_parser.parse);
 	code_edit_handler.gui_input.connect(vim_mode_state.check_input);
 	editor_gui_input_parser.parsed.connect(nvim_api_requester.send_input);
+	editor_gui_input_parser.input_handeled.connect(get_viewport().set_input_as_handled)
 	vim_mode_state.input_handeled.connect(get_viewport().set_input_as_handled);
 	nvim_api_requester.request.connect(nvim_connection.send_request);
 	nvim_connection.recieved.connect(nvim_event_parser.parse);
