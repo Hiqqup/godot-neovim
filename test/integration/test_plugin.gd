@@ -70,3 +70,8 @@ func test_new_buffer():
 	evaluate_api(func():
 		plugin.nvim_connection.recieved.emit([[2, "new_buffer", [3, get_some_script_path()]]]);
 	,"nvim_buf_attach")
+
+func test_buf_lines_event():
+	plugin.nvim_connection.recieved.emit([[2, "new_buffer", [3, get_some_script_path()]]]);
+	plugin.nvim_connection.recieved.emit([[2, "nvim_buf_lines_event", [{ "buffer": { "type": "Buffer", "data": [3] }, "type": 0 }, 3, 9, 20, [], false]]])
+	assert_true(true)

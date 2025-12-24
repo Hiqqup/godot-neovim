@@ -34,6 +34,7 @@ func _enter_tree():
 	nvim_event_parser.new_buffer.connect(nvim_api_requester.attach_buffer)
 	nvim_event_parser.new_buffer.connect(nvim_buffer_manager.setup_mapping)
 	nvim_buffer_manager.buffer_detatched.connect(nvim_api_requester.delete_buffer)
+	nvim_event_parser.lines_changed.connect(nvim_buffer_manager.forward_lines_data)
 	
 	editor_setup.file_changed.connect(editor_events.file_changed.emit);
 	editor_setup.set_code_edit_requested.connect(code_edit_handler.set_code_edit);

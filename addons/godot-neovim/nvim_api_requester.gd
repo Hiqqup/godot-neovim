@@ -12,5 +12,4 @@ func detatch_ui():
 func attach_buffer(buffer_id: int, _p:=""):
 	request.emit("nvim_buf_attach",[0, false,{}]);
 func delete_buffer(buffer_id:int):
-	print("delete: " + str(buffer_id))
 	request.emit("nvim_buf_delete", [buffer_id, {force = true}])

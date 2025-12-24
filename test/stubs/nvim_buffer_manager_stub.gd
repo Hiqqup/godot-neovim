@@ -5,6 +5,6 @@ func _init()->void:
 	CodeEditInfo = CodeEditInfoStub;
 func detach_buffers():
 	super.detach_buffers()
-	for buffer in mappings:
-		buffer.code_edit.free();
-		mappings.remove_at(mappings.find(buffer))
+	for id in mappings.keys():
+		mappings[id].code_edit.free();
+		mappings.erase(id)

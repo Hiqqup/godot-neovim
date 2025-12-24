@@ -15,4 +15,4 @@ config/features=PackedStringArray("4.5", "Forward Plus")
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/gut/plugin.cfg")
+enabled=PackedStringArray("res://addons/godot-neovim/plugin.cfg", "res://addons/gut/plugin.cfg")
