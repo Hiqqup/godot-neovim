@@ -30,14 +30,19 @@ func set_mode(mode:String):
 	set_cursor_mode(mode);
 	mode_label.set_mode(mode);
 	pass
-
+var move_caret_programatically:= false
 func set_caret_pos(pos: Vector2i):
 	CodeEditInfo.set_caret_pos(code_edit,pos);
-
+	move_caret_programatically = true;
+	
 func get_caret_pos()->Vector2i:
 	return CodeEditInfo.get_caret_pos(code_edit);
 
+
 func caret_moved_emit():
+	if move_caret_programatically:
+		move_caret_programatically = false
+		return
 	caret_moved.emit(get_caret_pos());
 
 func set_cursor_mode(mode: String):

@@ -15,11 +15,11 @@ func parse(data: Array):
 			elif (response[1] == "redraw"):
 				_handle_redraw(response[2])
 			elif (response[1] == "nvim_buf_lines_event"):
-				print(response);
+				#print(response);
 				var lines_data = BufferLineEventData.new(response[2])
 				lines_changed.emit(lines_data.buffer_id, lines_data);
 		if (response[0] == RPC_RESPONSE and response[2] !=null):
-			print(response);
+			push_error(response);
 
 func _handle_redraw(commands: Array):
 	for command in commands:
