@@ -1,6 +1,7 @@
 extends CodeEditHandler
 const CodeEditHandler:= preload("res://addons/godot-neovim/code_edit_handler.gd")
 const CodeEditHandlerStub:=preload("res://test/stubs/code_edit_handler_stub.gd")
+const CodeEditInfoStub:= preload("res://test/stubs/code_edit_info_stub.gd")
 const Plugin:=preload("res://addons/godot-neovim/plugin.gd")
 func remove_code_edit():
 	var _code_edit = code_edit;
@@ -32,6 +33,3 @@ class ModeLabelStub extends ModeLabel:
 		has_parent = true;
 	func remove_form_parent():
 		has_parent = false
-class CodeEditInfoStub extends CodeEditInfoDependencyInjection:
-	static func get_current_code_edit()->CodeEdit:
-		return CodeEdit.new();

@@ -1,6 +1,6 @@
-extends Node
 const CodeEditBufferMapping:= preload("res://addons/godot-neovim/code_edit_buffer_mapping.gd")
-const CodeEditInfo:= preload("res://addons/godot-neovim/code_edit_info.gd")
+const CodeEditInfoDependencyInjection:= preload("res://addons/godot-neovim/code_edit_info.gd")
+var CodeEditInfo:= CodeEditInfoDependencyInjection;
 signal buffer_detatched(buffer_id:int)
 var mappings:Array[CodeEditBufferMapping];
 func setup_mapping(buffer_id:int, path:String):

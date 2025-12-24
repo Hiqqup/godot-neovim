@@ -4,12 +4,14 @@ const CodeEditHandlerStub:= preload("res://test/stubs/code_edit_handler_stub.gd"
 const DontChangeThisScript:= preload("res://test/stubs/dont_change_this_script.gd")
 const NvimConnectionStub:= preload("res://test/stubs/nvim_connection_stub.gd")
 const EditorSetupStub:=preload("res://test/stubs/editor_setup_stub.gd")
+const NvimBufferManagerStub:= preload("res://test/stubs/nvim_buffer_manager_stub.gd")
 var plugin := Plugin.new();
 
 func before_all():
 	plugin.code_edit_handler = CodeEditHandlerStub.constructor(plugin);
 	plugin.editor_setup = EditorSetupStub.new();
 	plugin.nvim_connection = NvimConnectionStub.new();
+	plugin.nvim_buffer_manager = NvimBufferManagerStub.new();
 	add_child(plugin);
 	plugin.editor_events.file_changed.disconnect(plugin.code_edit_handler.set_code_edit)
 func after_all():
@@ -19,6 +21,7 @@ func after_all():
 
 func after_each():
 	plugin.code_edit_handler.remove_code_edit();
+	plugin.nvim_buffer_manager.detach_buffers();
 
 static func get_some_script_path()->String:
 	return ProjectSettings.globalize_path((DontChangeThisScript as Script).resource_path);
@@ -65,5 +68,5 @@ func test_gui_input():
 
 func test_new_buffer():
 	evaluate_api(func():
-		plugin.nvim_connection.recieved.emit([[2, "new_buffer", [3, "/home/ju/Documents/projects/gd/godot-neovim-tests/addons/godot-neovim/mode_label.gd"]]]);
+		plugin.nvim_connection.recieved.emit([[2, "new_buffer", [3, get_some_script_path()]]]);
 	,"nvim_buf_attach")
