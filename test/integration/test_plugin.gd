@@ -62,4 +62,8 @@ func test_gui_input():
 		plugin.code_edit_handler.gui_input.emit(key_event);
 	,"nvim_input")
 	assert_true(get_viewport().is_input_handled());
-	
+
+func test_new_buffer():
+	evaluate_api(func():
+		plugin.nvim_connection.recieved.emit([[2, "new_buffer", [3, "/home/ju/Documents/projects/gd/godot-neovim-tests/addons/godot-neovim/mode_label.gd"]]]);
+	,"nvim_buf_attach")

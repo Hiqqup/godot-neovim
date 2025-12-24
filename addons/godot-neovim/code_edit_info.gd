@@ -23,3 +23,6 @@ static func get_current_code_edit()->CodeEdit:
 	var script_editor := EditorInterface.get_script_editor();
 	var _code_edit:= script_editor.get_current_editor().get_base_editor() as CodeEdit
 	return _code_edit
+static func get_current_script()->Script:
+	var script_editor := EditorInterface.get_script_editor();
+	return script_editor.get_current_script()

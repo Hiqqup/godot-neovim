@@ -9,3 +9,8 @@ func attach_ui(terminal_dimensions: Vector2i, options = {}):
 	request.emit("nvim_ui_attach", [terminal_dimensions.x, terminal_dimensions.y,options])
 func detatch_ui():
 	request.emit("nvim_ui_detach",[]);
+func attach_buffer(buffer_id: int, _p:=""):
+	request.emit("nvim_buf_attach",[0, false,{}]);
+func delete_buffer(buffer_id:int):
+	print("delete: " + str(buffer_id))
+	request.emit("nvim_buf_delete", [buffer_id, {force = true}])

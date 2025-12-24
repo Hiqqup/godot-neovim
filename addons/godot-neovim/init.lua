@@ -13,3 +13,12 @@ vim.api.nvim_set_hl(0, 'Normal', { fg = 'NONE', bg = 'NONE' })
 vim.api.nvim_set_hl(0, 'Search', { fg = 'NONE', bg = 'NONE' })
 vim.api.nvim_set_hl(0, 'Visual', { fg = 'NONE', bg = 'NONE' })
 vim.api.nvim_set_hl(0, 'CursorLine', { fg = 'NONE', bg = 'NONE' })
+
+vim.api.nvim_create_autocmd("BufAdd", {
+    pattern = "*",
+    callback = function(args)
+        local buf = args.buf
+        local path = vim.api.nvim_buf_get_name(buf)
+        vim.rpcnotify(0, "new_buffer", buf, path)
+    end,
+})

@@ -7,6 +7,7 @@ const EditorGuiInputParser:= preload("res://addons/godot-neovim/editor_gui_input
 const CodeEditHandler:= preload("res://addons/godot-neovim/code_edit_handler.gd")
 const VimModeState:= preload("res://addons/godot-neovim/vim_mode_state.gd")
 const EditorSetup:=preload("res://addons/godot-neovim/editor_setup.gd")
+const NvimBufferManager:=preload("res://addons/godot-neovim/nvim_buffer_manager.gd")
 var nvim_connection:=NvimConnection.new();
 var nvim_event_parser:=NvimEventParser.new();
 var nvim_api_requester:=NvimApiRequester.new();
@@ -15,6 +16,7 @@ var editor_gui_input_parser:= EditorGuiInputParser.new();
 var code_edit_handler:=CodeEditHandler.new();
 var vim_mode_state:=VimModeState.new();
 var editor_setup:=EditorSetup.new();
+var nvim_buffer_manager:=NvimBufferManager.new();
 func _enter_tree():
 	editor_events.file_changed.connect(code_edit_handler.set_code_edit);
 	editor_events.file_changed.connect(nvim_api_requester.change_file);
@@ -29,6 +31,9 @@ func _enter_tree():
 	nvim_event_parser.mode_changed.connect(vim_mode_state.set_mode);
 	nvim_event_parser.cursor_moved.connect(code_edit_handler.set_caret_pos);
 	nvim_event_parser.mode_changed.connect(code_edit_handler.set_mode);
+	nvim_event_parser.new_buffer.connect(nvim_api_requester.attach_buffer)
+	nvim_event_parser.new_buffer.connect(nvim_buffer_manager.setup_mapping)
+	nvim_buffer_manager.buffer_detatched.connect(nvim_api_requester.delete_buffer)
 	
 	editor_setup.file_changed.connect(editor_events.file_changed.emit);
 	editor_setup.set_code_edit_requested.connect(code_edit_handler.set_code_edit);
@@ -38,6 +43,7 @@ func _enter_tree():
 	editor_setup.setup();
 
 func _exit_tree():
+	nvim_buffer_manager.detach_buffers();
 	nvim_api_requester.detatch_ui()
 	code_edit_handler.remove_code_edit();
 

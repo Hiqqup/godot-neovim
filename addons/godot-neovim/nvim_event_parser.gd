@@ -2,16 +2,21 @@ const NvimEventParser:=preload("res://addons/godot-neovim/nvim_event_parser.gd")
 
 signal mode_changed(mode:String)
 signal cursor_moved(pos: Vector2i)
+signal new_buffer(buffer_id:int, path:String)
 
+const RPC_NOTIFICATION:=2
+const RPC_RESPONSE:=1;
 func parse(data: Array):
 	for response in data:
-		#print(response);
-		const RPC_NOTIFICATION:=2
 		if (response[0] == RPC_NOTIFICATION):
-			#print(response);
-			if (response[1] == "redraw"):
+			if (response[1] == "new_buffer"):
+				new_buffer.emit(response[2][0], response[2][1]);
+			elif (response[1] == "redraw"):
 				_handle_redraw(response[2])
-
+			else:
+				print(response);
+		if (response[0] == RPC_RESPONSE and response[2] !=null):
+			print(response);
 
 func _handle_redraw(commands: Array):
 	for command in commands:

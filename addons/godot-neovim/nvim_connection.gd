@@ -1,4 +1,4 @@
-# start with this command nvim --listen 127.0.0.1:6666 -u /home/ju/code/3d_squash_the_creeps_starter/addons/godot-neovim/init.lua
+# start with this command nvim --listen 127.0.0.1:6666 -u /home/ju/Documents/projects/gd/godot-neovim-tests/addons/godot-neovim/init.lua '[No Name]'
 const MsgPack := preload("res://addons/godot-neovim/msgpack.gd")
 enum MSG_PACK_RPC_TYPES {
 	REQUEST = 0,
@@ -38,7 +38,8 @@ func process():
 	if err == 0  and not data.is_empty():
 		var decoded = MsgPack.decode_multiple(data);
 		if decoded.error != OK:
-			printerr("Error decoding: "+ decoded.error_string)
+			printerr("Error decoding: "+ decoded.error_string)			
+			print(data);
 		recieved.emit(decoded.result);
 	elif err != 0:
 		print("Connection error: " + error_string(err))

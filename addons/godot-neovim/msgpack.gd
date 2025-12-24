@@ -369,7 +369,24 @@ static func _decode(buffer, ctx):
 		var res = buffer.get_data(size)
 		assert(res[0] == OK)
 		return res[1]
+	
+	elif head == 0xD4: # fixext 1
+		if buffer.get_size() - buffer.get_position() < 2:
+			ctx.error = FAILED
+			ctx.error_string = "not enough buffer for fixext1 header"
+			return null
 		
+		var type = buffer.get_8()   # type byte
+		var data = buffer.get_8()   # 1 byte payload
+		
+		return {
+			"buffer": {
+				"type": "Buffer",
+				"data": [data]
+			},
+			"type": type
+		}
+	
 	elif head == 0xC7: # ext 8
 		if buffer.get_size() - buffer.get_position() < 2:
 			ctx.error = FAILED
