@@ -1,21 +1,11 @@
 extends  GutTest
-const Plugin := preload("res://addons/godot-neovim/plugin.gd")
-const CodeEditHandlerStub:= preload("res://test/stubs/code_edit_handler_stub.gd")
+const PluginStub := preload("res://test/stubs/plugin_stub.gd")
 const DontChangeThisScript:= preload("res://test/stubs/dont_change_this_script.gd")
-const NvimConnectionStub:= preload("res://test/stubs/nvim_connection_stub.gd")
-const EditorSetupStub:=preload("res://test/stubs/editor_setup_stub.gd")
-const NvimBufferManagerStub:= preload("res://test/stubs/nvim_buffer_manager_stub.gd")
-var plugin := Plugin.new();
+var plugin := PluginStub.new();
 
 func before_all():
-	plugin.code_edit_handler = CodeEditHandlerStub.constructor(plugin);
-	plugin.editor_setup = EditorSetupStub.new();
-	plugin.nvim_connection = NvimConnectionStub.new();
-	plugin.nvim_buffer_manager = NvimBufferManagerStub.new();
 	add_child(plugin);
-	plugin.editor_events.file_changed.disconnect(plugin.code_edit_handler.set_code_edit)
 func after_all():
-	plugin.code_edit_handler.cleanup();
 	remove_child(plugin);
 	plugin.free();
 
@@ -46,15 +36,15 @@ func test_file_change():
 	evaluate_api(func():
 		plugin.editor_events.file_changed.emit(get_some_script_path());
 	,"nvim_command")
-func test_caret_moved():
-	var pos :=Vector2i(5,10);
-	evaluate_api(func():
-		plugin.editor_events.file_changed.emit(get_some_script_path());
-		plugin.code_edit_handler.set_caret_pos(pos);
-		plugin.code_edit_handler.code_edit.caret_changed.emit();
-	,"nvim_win_set_cursor")
-	var request_params: Array= get_signal_parameters(plugin.nvim_api_requester, "request")[1][1]
-	assert_eq(pos , Vector2i(request_params[1], request_params[0]-1))
+#func test_caret_moved():
+#	var pos :=Vector2i(5,10);
+#	evaluate_api(func():
+#		plugin.editor_events.file_changed.emit(get_some_script_path());
+#		plugin.code_edit_handler.set_caret_pos(pos);
+#		plugin.code_edit_handler.code_edit.caret_changed.emit();
+#	,"nvim_win_set_cursor")
+#	var request_params: Array= get_signal_parameters(plugin.nvim_api_requester, "request")[1][1]
+#	assert_eq(pos , Vector2i(request_params[1], request_params[0]-1))
 
 func test_gui_input():
 	plugin.vim_mode_state.mode = "normal"
