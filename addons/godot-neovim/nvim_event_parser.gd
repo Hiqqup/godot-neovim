@@ -5,7 +5,7 @@ signal cursor_moved(pos: Vector2i)
 
 func parse(data: Array):
 	for response in data:
-		print(response);
+		#print(response);
 		const RPC_NOTIFICATION:=2
 		if (response[0] == RPC_NOTIFICATION):
 			#print(response);
