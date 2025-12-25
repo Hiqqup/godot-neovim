@@ -3,6 +3,7 @@ const BufferLineEventData:=preload("res://addons/godot-neovim/buffer_line_event_
 var code_edit:CodeEdit
 var buffer_id :int;
 func handle_lines_data(d:BufferLineEventData):
+	code_edit.set_meta("moving_programmatically", true)
 	if d.first_line != d.last_line:
 		code_edit.select(d.first_line, 0, d.last_line ,0)
 		code_edit.delete_lines()

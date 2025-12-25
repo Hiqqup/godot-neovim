@@ -9,8 +9,9 @@ static func get_dimensions( code_edit: CodeEdit)->Vector2i:
 	return terminal_dimensions;
 
 static func set_caret_pos(code_edit: CodeEdit, pos: Vector2i):
+	code_edit.set_meta("moving_programmatically", true)
 	code_edit.set_caret_line(pos.y)
-	code_edit.set_caret_column(pos.x)
+	code_edit.set_caret_column(pos.x);
 
 static func get_caret_pos(code_edit:CodeEdit)->Vector2i:
 	var line := code_edit.get_caret_line() + 1 #might be specific to my config

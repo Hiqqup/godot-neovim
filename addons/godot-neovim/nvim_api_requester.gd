@@ -2,6 +2,7 @@ signal request(commands:String, params:Array)
 func change_file(path: String):
 	request.emit("nvim_command", ['e ' + path])
 func move_caret(pos: Vector2i):
+	print("position change_reqested");
 	request.emit("nvim_win_set_cursor",[0,[pos.y,pos.x]])
 func send_input(input:String):
 	request.emit("nvim_input", [ input])
