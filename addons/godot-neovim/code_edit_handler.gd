@@ -11,6 +11,7 @@ var unset_meta:=func(_e): code_edit.set_meta("moving_programmatically", false)
 func set_code_edit(_path:=""):
 	remove_code_edit();
 	code_edit = CodeEditInfo.get_current_code_edit();
+	unset_meta.call(0);
 	mode_label.add_to_status_bar(code_edit);
 	code_edit.caret_changed.connect(caret_moved_emit);
 	code_edit.gui_input.connect(gui_input.emit)
@@ -43,6 +44,7 @@ func caret_moved_emit():
 	if code_edit.get_meta("moving_programmatically"):
 		return
 	caret_moved.emit(get_caret_pos());
+	#print("emitted")
 
 func set_cursor_mode(mode: String):
 	if mode == 'insert':

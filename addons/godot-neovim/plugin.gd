@@ -20,9 +20,14 @@ var nvim_buffer_manager:=NvimBufferManager.new();
 func _enter_tree():
 	editor_events.file_changed.connect(code_edit_handler.set_code_edit);
 	editor_events.file_changed.connect(nvim_api_requester.change_file);
-	code_edit_handler.caret_moved.connect(nvim_api_requester.move_caret);
-	code_edit_handler.gui_input.connect(editor_gui_input_parser.parse);
+	code_edit_handler.caret_moved.connect(vim_mode_state.check_should_move_caret);
+	vim_mode_state.caret_should_move.connect(nvim_api_requester.move_caret);
+	vim_mode_state.track_lines.connect(nvim_buffer_manager.track_lines)
+	vim_mode_state.exited_insert_mode.connect(nvim_buffer_manager.get_lines_to_update)
+	vim_mode_state.entered_insert_mode.connect(nvim_buffer_manager.track_current_line)
+	nvim_buffer_manager.update_lines.connect(nvim_api_requester.buffer_set_lines)
 	code_edit_handler.gui_input.connect(vim_mode_state.check_input);
+	vim_mode_state.input_forwarded.connect(editor_gui_input_parser.parse);
 	editor_gui_input_parser.parsed.connect(nvim_api_requester.send_input);
 	editor_gui_input_parser.input_handeled.connect(get_viewport().set_input_as_handled)
 	vim_mode_state.input_handeled.connect(get_viewport().set_input_as_handled);
@@ -35,6 +40,7 @@ func _enter_tree():
 	nvim_event_parser.new_buffer.connect(nvim_buffer_manager.setup_mapping)
 	nvim_buffer_manager.buffer_detatched.connect(nvim_api_requester.delete_buffer)
 	nvim_event_parser.lines_changed.connect(nvim_buffer_manager.forward_lines_data)
+	
 	
 	editor_setup.file_changed.connect(editor_events.file_changed.emit);
 	editor_setup.set_code_edit_requested.connect(code_edit_handler.set_code_edit);

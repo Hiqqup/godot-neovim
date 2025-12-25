@@ -65,3 +65,10 @@ func test_buf_lines_event():
 	plugin.nvim_connection.recieved.emit([[2, "new_buffer", [3, get_some_script_path()]]]);
 	plugin.nvim_connection.recieved.emit([[2, "nvim_buf_lines_event", [{ "buffer": { "type": "Buffer", "data": [3] }, "type": 0 }, 3, 9, 20, [], false]]])
 	assert_true(true)
+
+#func test_vim_state_exit_insert_mode():
+#	var vms = plugin.vim_mode_state;
+#	watch_signals(vms);
+#	vms.set_mode("insert");
+#	vms.set_mode("normal")
+#	assert_signal_emitted(vms, "exited_insert_mode")
