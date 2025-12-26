@@ -7,6 +7,7 @@ signal lines_changed(buffer_id: int, lines_data:BufferLineEventData)
 signal insert_enter
 signal insert_leave
 signal insert_leave_pre
+signal visual_selection_started(pos: Vector2i)
 
 const RPC_NOTIFICATION:=2
 const RPC_RESPONSE:=1;
@@ -25,6 +26,13 @@ func parse(data: Array):
 					insert_enter.emit();
 				"insert_leave":
 					insert_leave.emit()
+				"visual_enter":
+					mode_changed.emit("visual" + response[2][0])
+				"visual_selection_start":
+					var pos: = Vector2i(response[2][0][1], response[2][0][0])
+					visual_selection_started.emit(pos)
+				_:
+					print(response[1])
 		
 		if (response[0] == RPC_RESPONSE and response[2] !=null):
 			push_error(response);
@@ -34,7 +42,9 @@ func _handle_redraw(commands: Array):
 		var command_string: String = command[0];
 		#print(command_string);
 		if command_string == "mode_change":
-			mode_changed.emit(command[1][0])
+			var mode =command[1][0];
+			if mode != "visual":
+				mode_changed.emit(mode)
 		if command_string == "win_viewport":
 			var params: Array = command[1];
 			var line = params[4];

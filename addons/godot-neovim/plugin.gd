@@ -8,6 +8,7 @@ const CodeEditHandler:= preload("res://addons/godot-neovim/code_edit_handler.gd"
 const VimModeState:= preload("res://addons/godot-neovim/vim_mode_state.gd")
 const EditorSetup:=preload("res://addons/godot-neovim/editor_setup.gd")
 const NvimBufferManager:=preload("res://addons/godot-neovim/nvim_buffer_manager.gd")
+const VisualSelectionManager:= preload("res://addons/godot-neovim/visual_selection_manager.gd")
 
 var nvim_connection:=NvimConnection.new();
 var nvim_event_parser:=NvimEventParser.new();
@@ -18,12 +19,14 @@ var code_edit_handler:=CodeEditHandler.new();
 var vim_mode_state:=VimModeState.new();
 var editor_setup:=EditorSetup.new();
 var nvim_buffer_manager:=NvimBufferManager.new();
+var visual_selection_manager:=VisualSelectionManager.new();
 
 func _enter_tree():
 	editor_events.file_changed.connect(code_edit_handler.set_code_edit);
 	editor_events.file_changed.connect(nvim_api_requester.change_file);
 	code_edit_handler.caret_moved.connect(vim_mode_state.check_should_move_caret);
-	code_edit_handler.gui_input.connect(vim_mode_state.check_input);
+	code_edit_handler.gui_input.connect(vim_mode_state.check_input)
+	code_edit_handler.current_code_edit_set.connect(visual_selection_manager.set_code_edit)
 	editor_gui_input_parser.parsed.connect(nvim_api_requester.send_input);
 	editor_gui_input_parser.input_handeled.connect(get_viewport().set_input_as_handled)
 	nvim_buffer_manager.buffer_detatched.connect(nvim_api_requester.delete_buffer)
@@ -38,8 +41,11 @@ func _enter_tree():
 
 func connect_nvim_event_parser():
 	nvim_event_parser.mode_changed.connect(vim_mode_state.set_mode);
-	nvim_event_parser.cursor_moved.connect(code_edit_handler.set_caret_pos);
 	nvim_event_parser.mode_changed.connect(code_edit_handler.set_mode);
+	nvim_event_parser.mode_changed.connect(visual_selection_manager.set_mode);
+	nvim_event_parser.visual_selection_started.connect(visual_selection_manager.set_selection_starting_point)
+	nvim_event_parser.cursor_moved.connect(code_edit_handler.set_caret_pos);
+	nvim_event_parser.cursor_moved.connect(visual_selection_manager.cursor_moved);
 	nvim_event_parser.new_buffer.connect(nvim_api_requester.attach_buffer)
 	nvim_event_parser.new_buffer.connect(nvim_buffer_manager.setup_mapping)
 	nvim_event_parser.lines_changed.connect(vim_mode_state.check_forward_line_change_data)

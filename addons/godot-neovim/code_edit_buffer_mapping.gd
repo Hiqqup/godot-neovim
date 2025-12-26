@@ -4,12 +4,10 @@ var code_edit:CodeEdit
 var buffer_id :int;
 var tracked_lines: Dictionary[int, bool]
 signal update_lines(buffer_id:int, start:int, end:int, replacements: Array)
+
 func _init(_code_edit:CodeEdit, _buffer_id: int) -> void:
 	code_edit = _code_edit
 	buffer_id = _buffer_id;
-
-
-
 
 func handle_lines_data(d:BufferLineEventData):
 	code_edit.set_meta("moving_programmatically", true)

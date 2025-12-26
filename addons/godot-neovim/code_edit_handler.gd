@@ -7,6 +7,7 @@ var mode_label:= ModeLabel.new();
 
 signal caret_moved(pos: Vector2i);
 signal gui_input(event: InputEvent);
+signal current_code_edit_set(code_edit: CodeEdit)
 var unset_meta:=func(_e): code_edit.set_meta("moving_programmatically", false)
 func set_code_edit(_path:=""):
 	remove_code_edit();
@@ -17,6 +18,7 @@ func set_code_edit(_path:=""):
 	code_edit.gui_input.connect(gui_input.emit)
 	code_edit.gui_input.connect(unset_meta)
 	set_cursor_mode(mode_label.text)
+	current_code_edit_set.emit(code_edit);
 
 
 func remove_code_edit():

@@ -1,4 +1,3 @@
-# start with this command nvim --listen 127.0.0.1:6666 -u /home/ju/Documents/projects/gd/godot-neovim-tests/addons/godot-neovim/init.lua '[No Name]'
 const MsgPack := preload("res://addons/godot-neovim/msgpack.gd")
 enum MSG_PACK_RPC_TYPES {
 	REQUEST = 0,
