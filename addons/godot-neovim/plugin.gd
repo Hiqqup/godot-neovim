@@ -8,6 +8,7 @@ const CodeEditHandler:= preload("res://addons/godot-neovim/code_edit_handler.gd"
 const VimModeState:= preload("res://addons/godot-neovim/vim_mode_state.gd")
 const EditorSetup:=preload("res://addons/godot-neovim/editor_setup.gd")
 const NvimBufferManager:=preload("res://addons/godot-neovim/nvim_buffer_manager.gd")
+
 var nvim_connection:=NvimConnection.new();
 var nvim_event_parser:=NvimEventParser.new();
 var nvim_api_requester:=NvimApiRequester.new();
@@ -17,6 +18,7 @@ var code_edit_handler:=CodeEditHandler.new();
 var vim_mode_state:=VimModeState.new();
 var editor_setup:=EditorSetup.new();
 var nvim_buffer_manager:=NvimBufferManager.new();
+
 func _enter_tree():
 	editor_events.file_changed.connect(code_edit_handler.set_code_edit);
 	editor_events.file_changed.connect(nvim_api_requester.change_file);
@@ -33,22 +35,24 @@ func _enter_tree():
 	connect_nvim_event_parser()
 	run_editor_setup();
 
+
 func connect_nvim_event_parser():
 	nvim_event_parser.mode_changed.connect(vim_mode_state.set_mode);
 	nvim_event_parser.cursor_moved.connect(code_edit_handler.set_caret_pos);
 	nvim_event_parser.mode_changed.connect(code_edit_handler.set_mode);
 	nvim_event_parser.new_buffer.connect(nvim_api_requester.attach_buffer)
 	nvim_event_parser.new_buffer.connect(nvim_buffer_manager.setup_mapping)
-	nvim_event_parser.lines_changed.connect(nvim_buffer_manager.forward_lines_data)
+	nvim_event_parser.lines_changed.connect(vim_mode_state.check_forward_line_change_data)
+	nvim_event_parser.insert_leave.connect(nvim_buffer_manager.get_lines_to_update)
+	nvim_event_parser.insert_enter.connect(nvim_buffer_manager.track_current_line)
+	nvim_event_parser.insert_leave.connect(code_edit_handler.cancel_code_completion)
 
 func connect_vim_mode_state():
 	vim_mode_state.caret_should_move.connect(nvim_api_requester.move_caret);
 	vim_mode_state.track_lines.connect(nvim_buffer_manager.track_lines)
-	vim_mode_state.exited_insert_mode.connect(nvim_buffer_manager.get_lines_to_update)
-	vim_mode_state.entered_insert_mode.connect(nvim_buffer_manager.track_current_line)
-	vim_mode_state.exited_insert_mode.connect(code_edit_handler.cancel_code_completion)
 	vim_mode_state.input_handeled.connect(get_viewport().set_input_as_handled);
 	vim_mode_state.input_forwarded.connect(editor_gui_input_parser.parse);
+	vim_mode_state.forward_line_change_data.connect(nvim_buffer_manager.forward_lines_data)
 
 func run_editor_setup():
 	editor_setup.file_changed.connect(editor_events.file_changed.emit);

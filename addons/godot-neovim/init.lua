@@ -22,3 +22,16 @@ vim.api.nvim_create_autocmd("BufAdd", {
         vim.rpcnotify(0, "new_buffer", buf, path)
     end,
 })
+
+vim.api.nvim_create_autocmd("InsertEnter", {
+    callback = function()
+        vim.rpcnotify(0, "insert_enter")
+    end,
+})
+
+vim.api.nvim_create_autocmd("InsertLeave", {
+    callback = function()
+        vim.rpcnotify(0, "insert_leave")
+    end,
+})
+

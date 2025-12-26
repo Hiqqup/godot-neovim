@@ -4,15 +4,13 @@ var mode: String = "";
 signal input_forwarded(input: InputEventKey)
 signal caret_should_move(pos)
 signal track_lines(pos)
-signal exited_insert_mode();
-signal entered_insert_mode();
+signal forward_line_change_data(buffer_id,data)
+func check_forward_line_change_data(buffer_id,data):
+	if mode != "insert":
+		forward_line_change_data.emit(buffer_id, data)
 func set_mode(_mode:String):
 	var old_mode = mode;
 	mode = _mode;
-	if old_mode == "insert" and _mode !="insert":
-		exited_insert_mode.emit();
-	if old_mode != "insert" and _mode =="insert":
-		entered_insert_mode.emit();
 func check_should_move_caret(pos):
 	if mode == "insert":
 		track_lines.emit(pos);
