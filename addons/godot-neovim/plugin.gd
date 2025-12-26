@@ -25,6 +25,7 @@ func _enter_tree():
 	vim_mode_state.track_lines.connect(nvim_buffer_manager.track_lines)
 	vim_mode_state.exited_insert_mode.connect(nvim_buffer_manager.get_lines_to_update)
 	vim_mode_state.entered_insert_mode.connect(nvim_buffer_manager.track_current_line)
+	vim_mode_state.exited_insert_mode.connect(code_edit_handler.cancel_code_completion)
 	nvim_buffer_manager.update_lines.connect(nvim_api_requester.buffer_set_lines)
 	code_edit_handler.gui_input.connect(vim_mode_state.check_input);
 	vim_mode_state.input_forwarded.connect(editor_gui_input_parser.parse);

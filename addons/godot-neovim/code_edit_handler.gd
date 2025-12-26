@@ -29,6 +29,9 @@ func remove_code_edit():
 	mode_label.remove_form_parent();
 	code_edit = null
 
+func cancel_code_completion():
+	code_edit.cancel_code_completion()
+
 func set_mode(mode:String):
 	set_cursor_mode(mode);
 	mode_label.set_mode(mode);
